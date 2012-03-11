@@ -1,0 +1,16 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    addressable (2.2.7)
+    em-websocket (0.3.6)
+      addressable (>= 2.1.1)
+      eventmachine (>= 0.12.9)
+    eventmachine (0.12.10)
+    json (1.6.5)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  em-websocket
+  json
