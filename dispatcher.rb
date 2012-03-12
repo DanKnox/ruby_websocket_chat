@@ -2,6 +2,8 @@ class Dispatcher
   require 'json'
   
   attr_reader :sockets
+  @@events  = Hash.new {|h,k| h[k] = Array.new}
+  @@classes = Hash.new
   
   def initialize
     @sockets = []
@@ -16,45 +18,24 @@ class Dispatcher
     dispatch( event_name, data, socket )
   end
   
-  def dispatch(event_name,data,socket)
-    case event_name.to_sym
-    when :new_message
-      trigger('new_message',data)
-    when :new_user
-      store_user_socket(data,socket)
-      send_user_list
-    when :change_username
-      change_user_name(data,socket)
-      send_user_list
-    end
-  end
-  
-  def store_user_socket(new_user,socket)
-    new_user['socket'] = socket
-    @users << new_user
-  end
-  
-  def send_user_list
-    trigger('user_list',@users)
-  end
-  
-  def change_user_name(new_user,socket)
-    delete_user_for_socket(socket)
-    store_user_socket(new_user,socket)
-  end
-  
-  def delete_user_for_socket(socket)
-    @users.delete_if {|u| u['socket'] == socket}
-  end  
-  
   def trigger(event_name,data)
     @sockets.each do |s|
-      s.send encoded_message(event_name, data)
+      s.send encoded_message( event_name, data )
     end
   end
   
+  def dispatch(event_name,data,socket)
+    puts "#{event_name} has #{@@events[event_name.to_sym].inspect}\n\n"
+    @@events[event_name.to_sym].each do |event|
+      handler = event.first
+      klass   = @@classes[handler]
+      method  = event.last
+      klass.send( method, data, socket, self )
+    end
+  end  
+  
   def close_socket(socket)
-    delete_user_for_socket( socket )
+    @@events[]
     @sockets.delete( socket )
   end
   
@@ -62,4 +43,12 @@ class Dispatcher
     [event_name, data].to_json
   end
   
+  def self.subscribe(event_name,options)
+    @@classes[options[:to]] ||= options[:to].new
+    @@events[event_name] << [options[:to],options[:with]]
+  end
+  
+  def self.describe_events(&block)
+    block.call(self)
+  end
 end

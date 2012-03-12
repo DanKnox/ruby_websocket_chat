@@ -1,7 +1,10 @@
 #require 'vendor/gems/environment'
 require 'rubygems'
 require 'em-websocket'
+require './chat_manager'
 require './dispatcher'
+require './events'
+
 
 dispatcher = Dispatcher.new
 EventMachine::WebSocket.start(:host => "0.0.0.0", :port => 9080) do |ws|
